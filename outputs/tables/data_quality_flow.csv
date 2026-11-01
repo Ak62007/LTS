@@ -4,7 +4,7 @@ pickup_in_january_2026,3724889,7,3724882
 standard_rate_code_1,3724882,1334391,2390491
 positive_trip_distance,2390491,17940,2372551
 positive_fare_amount,2372551,33753,2338798
-duration_1_to_120_minutes,2338798,47816,2290982
-passenger_count_1_to_6,2290982,13648,2277334
-eligible_records,2277334,0,2277334
-deterministic_sample,2277334,2267334,10000
+duration_at_least_1_minute,2338798,47068,2291730
+passenger_count_at_least_1,2291730,13648,2278082
+eligible_records,2278082,0,2278082
+deterministic_sample,2278082,2268082,10000

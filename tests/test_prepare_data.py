@@ -21,7 +21,7 @@ def synthetic_trips() -> pd.DataFrame:
     """Build rows where each invalid observation targets one filtering rule."""
     pickup = pd.Timestamp("2026-01-03 23:30:00")
     rows = []
-    for source_row_id in range(7):
+    for source_row_id in range(9):
         rows.append(
             {
                 "source_row_id": source_row_id,
@@ -40,16 +40,25 @@ def synthetic_trips() -> pd.DataFrame:
     rows[4]["fare_amount"] = -5.0
     rows[5]["tpep_dropoff_datetime"] = pickup
     rows[6]["passenger_count"] = 0
+    rows[7]["tpep_dropoff_datetime"] = pickup + pd.Timedelta(hours=8)
+    rows[8]["passenger_count"] = 12
     return pd.DataFrame(rows)
 
 
-def test_filters_apply_sequentially_and_keep_only_valid_trip() -> None:
+def test_filters_apply_sequentially_and_keep_all_valid_trips() -> None:
     eligible, audit = filter_trip_records(synthetic_trips())
 
-    assert eligible["source_row_id"].tolist() == [0]
+    assert eligible["source_row_id"].tolist() == [0, 7, 8]
     rule_rows = audit.iloc[1:7]
     assert rule_rows["records_removed"].tolist() == [1, 1, 1, 1, 1, 1]
-    assert audit.iloc[-1]["records_after"] == 1
+    assert audit.iloc[-1]["records_after"] == 3
+
+
+def test_no_upper_duration_or_passenger_limit_is_applied() -> None:
+    eligible, _ = filter_trip_records(synthetic_trips())
+
+    assert eligible["duration_min"].max() == 8 * 60
+    assert eligible["passenger_count"].max() == 12
 
 
 def test_engineered_time_features_are_correct() -> None:
@@ -93,8 +102,8 @@ def test_generated_sample_matches_recorded_checksum() -> None:
     assert sample["pickup_datetime"].between("2026-01-01", "2026-01-31 23:59:59").all()
     assert sample["fare_amount"].gt(0).all()
     assert sample["trip_distance"].gt(0).all()
-    assert sample["duration_min"].between(1, 120).all()
-    assert sample["passenger_count"].between(1, 6).all()
+    assert sample["duration_min"].ge(1).all()
+    assert sample["passenger_count"].ge(1).all()
     assert np.allclose(
         sample["pickup_hour_sin"] ** 2 + sample["pickup_hour_cos"] ** 2,
         1,

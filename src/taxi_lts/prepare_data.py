@@ -6,7 +6,6 @@ import argparse
 import hashlib
 import json
 from collections.abc import Callable
-from datetime import date
 from pathlib import Path
 
 import numpy as np
@@ -21,6 +20,7 @@ SOURCE_URL = (
     "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-01.parquet"
 )
 EXPECTED_RAW_SHA256 = "8b3933fe6f0d7b6d8826613c0dd724edc680ff7c49e2bd4c7635c05102728637"
+RAW_RETRIEVAL_DATE = "2026-11-01"
 REQUIRED_COLUMNS = [
     "tpep_pickup_datetime",
     "tpep_dropoff_datetime",
@@ -89,14 +89,8 @@ def filter_trip_records(data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]
         ("standard_rate_code_1", lambda frame: frame["RatecodeID"].eq(1)),
         ("positive_trip_distance", lambda frame: frame["trip_distance"].gt(0)),
         ("positive_fare_amount", lambda frame: frame["fare_amount"].gt(0)),
-        (
-            "duration_1_to_120_minutes",
-            lambda frame: frame["duration_min"].between(1, 120, inclusive="both"),
-        ),
-        (
-            "passenger_count_1_to_6",
-            lambda frame: frame["passenger_count"].between(1, 6, inclusive="both"),
-        ),
+        ("duration_at_least_1_minute", lambda frame: frame["duration_min"].ge(1)),
+        ("passenger_count_at_least_1", lambda frame: frame["passenger_count"].ge(1)),
     ]
 
     audit_rows.append(
@@ -302,7 +296,7 @@ def run_preparation(
         ),
         "source_page": SOURCE_PAGE,
         "source_url": SOURCE_URL,
-        "retrieval_date": date.today().isoformat(),
+        "retrieval_date": RAW_RETRIEVAL_DATE,
         "raw_filename": raw_path.name,
         "raw_file_size_bytes": raw_path.stat().st_size,
         "raw_sha256": raw_sha256,

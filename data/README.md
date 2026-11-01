@@ -12,10 +12,11 @@ uv run python -m src.taxi_lts.prepare_data
 ```
 
 The workflow keeps January 2026 pickups with standard rate code `1`, positive
-distance and fare, duration from 1 through 120 minutes, and passenger count from
-1 through 6. It does not impose an upper fare or distance cutoff. From the
-eligible population it samples 10,000 records without replacement using seed
-`42`, then sorts selected records by their original source-row identifier.
+distance and fare, duration of at least 1 minute, and passenger count of at
+least 1. It does not impose an upper cutoff on fare, distance, duration, or
+passenger count. From the eligible population it samples 10,000 records without
+replacement using seed `42`, then sorts selected records by their original
+source-row identifier.
 
 Generated audit tables are stored in `outputs/tables/`. The processed CSV is a
 reproducible modelling input, but the TLC cautions that provider-submitted trip
