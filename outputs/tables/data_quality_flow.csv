@@ -1,0 +1,10 @@
+stage,records_before,records_removed,records_after
+original_records,3724889,0,3724889
+pickup_in_january_2026,3724889,7,3724882
+standard_rate_code_1,3724882,1334391,2390491
+positive_trip_distance,2390491,17940,2372551
+positive_fare_amount,2372551,33753,2338798
+duration_1_to_120_minutes,2338798,47816,2290982
+passenger_count_1_to_6,2290982,13648,2277334
+eligible_records,2277334,0,2277334
+deterministic_sample,2277334,2267334,10000

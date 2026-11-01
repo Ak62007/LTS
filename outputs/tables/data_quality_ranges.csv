@@ -1,0 +1,13 @@
+dataset,variable,minimum,maximum
+raw_relevant,fare_amount,-2555.2000000000,2555.2000000000
+raw_relevant,trip_distance,0.0000000000,269097.4800000000
+raw_relevant,duration_min,-11.7000000000,7507.9000000000
+raw_relevant,passenger_count,0.0000000000,9.0000000000
+eligible_population,fare_amount,0.4000000000,231.2000000000
+eligible_population,trip_distance,0.0100000000,295.9900000000
+eligible_population,duration_min,1.0000000000,119.7000000000
+eligible_population,passenger_count,1.0000000000,6.0000000000
+final_sample,fare_amount,3.0000000000,179.4000000000
+final_sample,trip_distance,0.0100000000,49.8000000000
+final_sample,duration_min,1.0166666667,99.7000000000
+final_sample,passenger_count,1.0000000000,6.0000000000

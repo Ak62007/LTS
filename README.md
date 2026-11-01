@@ -32,7 +32,15 @@ uv sync
 uv run pytest
 ```
 
-The data and analysis entry points will be added at their respective review checkpoints.
+Prepare the verified January 2026 data sample with:
+
+```bash
+uv run python -m src.taxi_lts.prepare_data
+```
+
+The command verifies the raw-file checksum, applies the documented eligibility
+rules, produces a deterministic 10,000-record sample, and exports data-quality
+tables. See `data/README.md` for the detailed data policy.
 
 ## Reproducibility policy
 
