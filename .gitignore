@@ -1,0 +1,21 @@
+# Python and uv
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Source data and local downloads
+data/raw/*
+!data/raw/.gitkeep
+
+# Temporary render products
+report/rendered/
+presentation/rendered/
+*.tmp
+.DS_Store
