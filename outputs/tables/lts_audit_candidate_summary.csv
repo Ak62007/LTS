@@ -1,0 +1,2 @@
+training_observations,alpha,raw_h_subset_size,raw_mad_scale,reweighting_cutoff,zero_reweight_count,absolute_standardized_residual_above_2_5_count,audit_candidate_count,audit_candidate_fraction
+40000,0.7500000000,30000,0.5106056440,2.2414027276,6452,5929,6452,0.1613000000

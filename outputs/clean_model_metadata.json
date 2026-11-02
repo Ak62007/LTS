@@ -1,0 +1,14 @@
+{
+  "scope": "clean models; contamination not yet applied",
+  "training_observations": 40000,
+  "test_observations": 10000,
+  "seed": 42,
+  "initial_subsets": 500,
+  "primary_alpha": 0.75,
+  "input_csv_sha256": "9325f572dc4d2036b2df67f2f2e63350a3b88bc52b8b7cde84b7d1f727a7fe39",
+  "ols_test_mae": 2.0860485231862644,
+  "ols_test_rmse": 3.253341985757091,
+  "primary_reweighted_lts_test_mae": 1.0152377727132065,
+  "primary_reweighted_lts_test_rmse": 8.75612548485349,
+  "primary_audit_candidate_count": 6452
+}

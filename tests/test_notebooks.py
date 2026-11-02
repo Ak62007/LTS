@@ -9,6 +9,7 @@ NOTEBOOKS = [
     "01_data_preparation_sampling_and_split.ipynb",
     "02_fast_lts_validation_and_scalability.ipynb",
     "03_training_eda_and_model_specification.ipynb",
+    "04_clean_ols_and_lts_comparison.ipynb",
 ]
 
 

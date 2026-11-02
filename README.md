@@ -80,6 +80,7 @@ to the frozen model specification:
 1. `notebooks/01_data_preparation_sampling_and_split.ipynb`
 2. `notebooks/02_fast_lts_validation_and_scalability.ipynb`
 3. `notebooks/03_training_eda_and_model_specification.ipynb`
+4. `notebooks/04_clean_ols_and_lts_comparison.ipynb`
 
 Every code cell is executed and its output is stored in the notebook. Rebuild
 all three from the repository root with:

@@ -1,0 +1,7 @@
+predictor,training_mean,training_scale
+trip_distance,2.5499687500,3.0484742621
+duration_min,14.2168850000,17.8937022478
+passenger_count,1.2616250000,0.6702442535
+pickup_hour_sin,-0.3284151089,0.6287727015
+pickup_hour_cos,-0.1972383853,0.6766723177
+is_weekend,0.2624750000,0.4399794022

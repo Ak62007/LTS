@@ -710,6 +710,194 @@ The next phase is clean OLS and FAST-LTS fitting, followed by one evaluation on 
     )
 
 
+def build_clean_model_notebook() -> nbformat.NotebookNode:
+    """Create the clean OLS and LTS comparison notebook."""
+    return notebook(
+        [
+            markdown(
+                r"""
+# 04 — Clean OLS and FAST-LTS comparison
+
+This notebook explains the first protected model comparison. All scaling and
+fitting used only the 40,000 training observations. The 10,000 test outcomes
+were evaluated only after OLS and all prespecified LTS fits were frozen.
+
+The methods remain inside ED409 Modules I–II: multiple OLS, White-family HC3
+uncertainty, robust LTS, and outlier diagnostics. No contamination has been
+applied yet.
+"""
+            ),
+            code(
+                """
+from pathlib import Path
+import json
+
+import matplotlib.pyplot as plt
+import pandas as pd
+from IPython.display import display
+
+PROJECT_ROOT = Path.cwd()
+TABLES = PROJECT_ROOT / "outputs/tables"
+metadata = json.loads((PROJECT_ROOT / "outputs/clean_model_metadata.json").read_text())
+display(pd.Series(metadata, name="Value").to_frame())
+"""
+            ),
+            markdown(
+                r"""
+## 1. Leakage protection and frozen choices
+
+The `StandardScaler` was fitted on training predictors only. The same stored
+means and scales transformed the test predictors. The primary LTS setting was
+fixed at `alpha = 0.75`; `0.50` and `0.90` are sensitivity analyses, not values
+chosen to optimize test performance. Each fit used 500 initial subsets and
+seed 42 with a two-thread limit.
+"""
+            ),
+            code(
+                """
+scaler = pd.read_csv(TABLES / "training_scaler_parameters.csv")
+display(scaler.style.format({"training_mean": "{:.5f}", "training_scale": "{:.5f}"}))
+"""
+            ),
+            markdown(
+                r"""
+## 2. Prediction measures
+
+- MAE is the mean absolute error and describes typical absolute loss.
+- Median absolute error is even less affected by a small number of huge errors.
+- RMSE squares errors before averaging, so rare very large misses dominate it.
+- R-squared compares squared prediction error with predicting the response mean.
+
+Because these measures penalize tails differently, robust and non-robust models
+can rank differently without either calculation being incorrect.
+"""
+            ),
+            code(
+                """
+performance = pd.read_csv(TABLES / "clean_model_performance.csv")
+test_performance = performance.loc[performance["evaluation_split"].eq("test")].copy()
+display(test_performance.style.format({
+    "alpha": lambda value: "" if pd.isna(value) else f"{value:.2f}",
+    "mae": "{:.3f}", "rmse": "{:.3f}",
+    "median_absolute_error": "{:.3f}", "r_squared": "{:.3f}",
+}))
+
+test_performance["label"] = test_performance.apply(
+    lambda row: row["estimator"] if pd.isna(row["alpha"])
+    else f"{row['estimator']} a={row['alpha']:.2f}", axis=1,
+)
+fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+axes[0].barh(test_performance["label"], test_performance["mae"], color="#315C7C")
+axes[0].set(title="Clean test MAE", xlabel="USD")
+axes[1].barh(test_performance["label"], test_performance["rmse"], color="#4F772D")
+axes[1].set(title="Clean test RMSE", xlabel="USD")
+plt.tight_layout()
+plt.show()
+"""
+            ),
+            markdown(
+                r"""
+### Interpretation
+
+Primary reweighted LTS has test MAE about $1.02 and median absolute error about
+$0.35, compared with OLS MAE $2.09 and median absolute error $1.59. LTS follows
+the dominant fare structure much more closely for ordinary trips.
+
+However, primary LTS test RMSE is about $8.76 and R-squared about 0.45, while OLS
+RMSE is $3.25 and R-squared about 0.92. A small number of extreme trips produce
+very large LTS errors and dominate squared-error measures. Therefore the honest
+conclusion is a trade-off: LTS is better for the dominant pattern and typical
+absolute error, while OLS better accommodates the full tail under squared loss.
+"""
+            ),
+            markdown(
+                r"""
+## 3. Coefficient interpretation
+
+Coefficients are back-transformed to the original predictor units. HC3 standard
+errors are reported only for OLS; they belong to the White
+heteroskedasticity-consistent family and do not change the OLS coefficients.
+"""
+            ),
+            code(
+                """
+coefficients = pd.read_csv(TABLES / "clean_model_coefficients.csv")
+primary = coefficients.loc[
+    coefficients["estimator"].eq("OLS") | coefficients["alpha"].eq(0.75)
+]
+display(primary.style.format({
+    "alpha": lambda value: "" if pd.isna(value) else f"{value:.2f}",
+    "coefficient_original_units": "{:.4f}",
+    "ols_hc3_standard_error": lambda value: "" if pd.isna(value) else f"{value:.4f}",
+}))
+"""
+            ),
+            markdown(
+                r"""
+OLS estimates about $3.62 per mile and $0.08 per minute. Primary reweighted LTS
+estimates about $1.81 per mile and $0.61 per minute, close to the dominant NYC
+metered-fare geometry visible in the dense cloud. The large difference is the
+substantive evidence of sensitivity: extreme duration/fare combinations pull
+OLS away from the relationship followed by most trips.
+
+These are conditional associations, not causal effects.
+"""
+            ),
+            markdown(
+                r"""
+## 4. Alpha sensitivity
+
+At `alpha = 0.50`, the software enforces the mathematical minimum
+`h = floor((n + p + 1) / 2) = 20,003`, rather than exactly 20,000. Higher alpha
+uses more observations and provides less trimming. The sensitivity table is
+reported without selecting alpha from test performance; 0.75 remains primary.
+"""
+            ),
+            code(
+                """
+display(test_performance[[
+    "estimator", "alpha", "mae", "rmse", "median_absolute_error", "r_squared"
+]].style.format(precision=3))
+"""
+            ),
+            markdown(
+                r"""
+## 5. Audit candidates
+
+For primary raw LTS, residuals are standardized by the robust MAD scale. A row
+is an audit candidate if it receives zero in the explicit reweighting step or
+has absolute robust standardized residual above 2.5. This is a screening rule,
+not a declaration of error or fraud.
+"""
+            ),
+            code(
+                """
+audit_summary = pd.read_csv(TABLES / "lts_audit_candidate_summary.csv")
+candidates = pd.read_csv(TABLES / "lts_audit_candidates.csv")
+display(audit_summary.style.format(precision=4))
+display(candidates.head(15).style.format(precision=3))
+"""
+            ),
+            markdown(
+                r"""
+Primary LTS marks 6,452 of 40,000 training rows (16.13%) for review. This is a
+broad modelling screen, not a practical accusation list. The next analysis
+should describe candidate patterns and later test whether the prespecified
+$100 response contamination can be detected separately from genuine records.
+
+## Presentation statement
+
+> Clean LTS does not dominate OLS on every loss function. It substantially
+> reduces typical absolute error and reveals the dominant tariff relationship,
+> but it incurs very large squared errors on rare extreme trips. That contrast
+> is the robustness result: the estimators target different aspects of a
+> heterogeneous dataset.
+"""
+            ),
+        ]
+    )
+
+
 def execute_and_write(document: nbformat.NotebookNode, filename: str) -> None:
     """Execute a notebook from the project root and write the executed file."""
     client = NotebookClient(
@@ -736,6 +924,9 @@ def main() -> None:
     )
     execute_and_write(
         build_eda_notebook(), "03_training_eda_and_model_specification.ipynb"
+    )
+    execute_and_write(
+        build_clean_model_notebook(), "04_clean_ols_and_lts_comparison.ipynb"
     )
 
 
