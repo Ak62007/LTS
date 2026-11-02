@@ -72,6 +72,22 @@ Run training-only exploratory and model-specification diagnostics with:
 uv run python -m src.taxi_lts.explore_training
 ```
 
+## Executed teaching notebooks
+
+Open the notebooks in this order to follow the completed work from source data
+to the frozen model specification:
+
+1. `notebooks/01_data_preparation_sampling_and_split.ipynb`
+2. `notebooks/02_fast_lts_validation_and_scalability.ipynb`
+3. `notebooks/03_training_eda_and_model_specification.ipynb`
+
+Every code cell is executed and its output is stored in the notebook. Rebuild
+all three from the repository root with:
+
+```bash
+uv run python notebooks/build_executed_notebooks.py
+```
+
 ## Reproducibility policy
 
 All random sampling and splitting uses seed `42`. Raw data provenance and checksums will be recorded before analysis. Reported claims must be generated from the checked-in workflow; flagged records are audit candidates, not allegations of fraud.
