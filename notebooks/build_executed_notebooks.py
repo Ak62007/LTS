@@ -1044,6 +1044,32 @@ rare tariffs, recording problems, omitted route effects, or legitimate unusual
 trips. The result supports using LTS flags for **audit prioritization**, not
 automatic fraud classification.
 
+## 5. What the fitted relationships are doing
+
+PCA is not used for these plots. PCA ignores fare when constructing components,
+and a line against the first component would not faithfully represent either
+six-predictor regression. Instead, the reference-profile plots vary one
+predictor while holding the others at a valid stated trip. The response-surface
+plots vary distance and duration together while fixing one passenger, weekday,
+and noon.
+"""
+            ),
+            code(
+                """
+from IPython.display import Image
+
+display(Image(filename=PROJECT_ROOT / "outputs/figures/clean_stress_fitted_profiles.png"))
+display(Image(filename=PROJECT_ROOT / "outputs/figures/clean_stress_prediction_surfaces.png"))
+"""
+            ),
+            markdown(
+                r"""
+The solid and dashed LTS profiles nearly overlap, directly displaying its
+stability under contamination. The stressed OLS profile shifts upward, mainly
+through the intercept increase. The surfaces also reveal the deeper clean-data
+difference: OLS places much greater weight on distance, while LTS follows a
+joint distance-duration tariff-like plane.
+
 ## Presentation statement
 
 > Under a controlled 5% +$100 response shift, OLS coefficients and clean-test
