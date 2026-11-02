@@ -19,6 +19,7 @@ from src.taxi_lts import RANDOM_SEED
 from src.taxi_lts.prepare_data import (
     PROJECT_ROOT,
     RAW_FILENAME,
+    deterministic_nested_sample,
     engineer_features,
     filter_trip_records,
     load_raw_data,
@@ -73,12 +74,7 @@ def build_nested_pool(raw_path: Path, maximum_size: int) -> pd.DataFrame:
     raw_data = load_raw_data(raw_path)
     eligible, _ = filter_trip_records(raw_data)
     engineered = engineer_features(eligible)
-    if maximum_size > len(engineered):
-        raise ValueError(
-            f"Requested {maximum_size:,} rows from {len(engineered):,} eligible trips."
-        )
-    positions = np.random.default_rng(RANDOM_SEED).permutation(len(engineered))
-    return engineered.iloc[positions[:maximum_size]].reset_index(drop=True)
+    return deterministic_nested_sample(engineered, maximum_size, seed=RANDOM_SEED)
 
 
 def original_unit_coefficients(

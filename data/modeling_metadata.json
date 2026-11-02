@@ -1,0 +1,16 @@
+{
+  "eligible_population_size": 2278082,
+  "modeling_sample_size": 50000,
+  "training_size": 40000,
+  "test_size": 10000,
+  "test_fraction": 0.2,
+  "selection_seed": 42,
+  "split_seed": 42,
+  "selection_method": "prefix of NumPy Generator permutation",
+  "split_method": "sklearn train_test_split with shuffle=True",
+  "benchmark_identity_verified": true,
+  "sample_source_id_sha256": "bbb8982488eb73d9bc8637ae27735972c71f35be2e7d6503ca5ea6ea9d0068f8",
+  "train_source_id_sha256": "199b0d9697584054d47e44638848bc40fb1b2467dbf07902991466df097eb384",
+  "test_source_id_sha256": "cb0b169f72b002de2ad4ff2a5a0cc87ab1e80931dd6d5dbacb5262d20e758e0f",
+  "modeling_csv_sha256": "9325f572dc4d2036b2df67f2f2e63350a3b88bc52b8b7cde84b7d1f727a7fe39"
+}

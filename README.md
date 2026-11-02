@@ -60,6 +60,12 @@ The benchmark uses deterministic nested samples, 500 FAST-LTS starting subsets,
 and a two-thread numerical-library limit. Results are written to
 `outputs/tables/lts_scalability_benchmark.csv`.
 
+Create the fixed 50,000-record modelling sample and its 80/20 split with:
+
+```bash
+uv run python -m src.taxi_lts.split_data
+```
+
 ## Reproducibility policy
 
 All random sampling and splitting uses seed `42`. Raw data provenance and checksums will be recorded before analysis. Reported claims must be generated from the checked-in workflow; flagged records are audit candidates, not allegations of fraud.

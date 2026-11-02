@@ -159,6 +159,18 @@ def deterministic_sample(
     )
 
 
+def deterministic_nested_sample(
+    data: pd.DataFrame, sample_size: int, seed: int = RANDOM_SEED
+) -> pd.DataFrame:
+    """Return a prefix from one seeded permutation for nested sample sizes."""
+    if len(data) < sample_size:
+        raise ValueError(
+            f"Cannot sample {sample_size:,} rows from {len(data):,} eligible rows."
+        )
+    positions = np.random.default_rng(seed).permutation(len(data))[:sample_size]
+    return data.iloc[positions].reset_index(drop=True)
+
+
 def missingness_table(raw_data: pd.DataFrame, sample: pd.DataFrame) -> pd.DataFrame:
     """Summarize missing values before filtering and in the final sample."""
     rows: list[dict[str, int | float | str]] = []

@@ -21,3 +21,14 @@ source-row identifier.
 Generated audit tables are stored in `outputs/tables/`. The processed CSV is a
 reproducible modelling input, but the TLC cautions that provider-submitted trip
 records are not guaranteed to be fully accurate.
+
+After FAST-LTS scalability validation, create the fixed 50,000-trip modelling
+sample and its 40,000/10,000 train-test assignment with:
+
+```bash
+uv run python -m src.taxi_lts.split_data
+```
+
+The selection is the exact seed-42 nested sample used by the 50,000-row
+benchmark. Split membership is assigned once and stored before any scaling,
+exploration, contamination, or model evaluation.
