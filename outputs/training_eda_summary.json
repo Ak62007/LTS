@@ -1,0 +1,16 @@
+{
+  "scope": "training records only",
+  "training_observations": 40000,
+  "predictor_count": 6,
+  "training_source_id_sha256": "199b0d9697584054d47e44638848bc40fb1b2467dbf07902991466df097eb384",
+  "input_csv_sha256": "9325f572dc4d2036b2df67f2f2e63350a3b88bc52b8b7cde84b7d1f727a7fe39",
+  "training_r_squared": 0.9269296543679568,
+  "training_mae": 2.0724349685559456,
+  "training_rmse": 3.2821509991423143,
+  "breusch_pagan_p_value": 0.0,
+  "ramsey_reset_p_value": 0.0,
+  "jarque_bera_p_value": 0.0,
+  "high_leverage_count": 2038,
+  "cook_above_threshold_count": 1663,
+  "absolute_studentized_residual_above_3_count": 575
+}

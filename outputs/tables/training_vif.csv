@@ -1,0 +1,8 @@
+term,vif
+const,6.1407173945
+trip_distance,1.2147606004
+duration_min,1.2102020594
+passenger_count,1.0117585668
+pickup_hour_sin,1.0674274027
+pickup_hour_cos,1.0856081296
+is_weekend,1.0149146414

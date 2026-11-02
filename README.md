@@ -66,6 +66,12 @@ Create the fixed 50,000-record modelling sample and its 80/20 split with:
 uv run python -m src.taxi_lts.split_data
 ```
 
+Run training-only exploratory and model-specification diagnostics with:
+
+```bash
+uv run python -m src.taxi_lts.explore_training
+```
+
 ## Reproducibility policy
 
 All random sampling and splitting uses seed `42`. Raw data provenance and checksums will be recorded before analysis. Reported claims must be generated from the checked-in workflow; flagged records are audit candidates, not allegations of fraud.
