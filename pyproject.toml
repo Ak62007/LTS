@@ -32,6 +32,9 @@ packages = ["src/taxi_lts"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
+filterwarnings = [
+    "ignore::pandas.errors.Pandas4Warning:statsmodels.*",
+]
 pythonpath = ["."]
 testpaths = ["tests"]
 

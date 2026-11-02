@@ -42,6 +42,24 @@ The command verifies the raw-file checksum, applies the documented eligibility
 rules, produces a deterministic 10,000-record sample, and exports data-quality
 tables. See `data/README.md` for the detailed data policy.
 
+Validate FAST-LTS on a known contaminated linear relationship with:
+
+```bash
+uv run python -m src.taxi_lts.validate_lts
+```
+
+Run the guarded scalability benchmark one sample size at a time with:
+
+```bash
+uv run python -m src.taxi_lts.benchmark_lts --sample-size 10000
+uv run python -m src.taxi_lts.benchmark_lts --sample-size 25000
+uv run python -m src.taxi_lts.benchmark_lts --sample-size 50000
+```
+
+The benchmark uses deterministic nested samples, 500 FAST-LTS starting subsets,
+and a two-thread numerical-library limit. Results are written to
+`outputs/tables/lts_scalability_benchmark.csv`.
+
 ## Reproducibility policy
 
 All random sampling and splitting uses seed `42`. Raw data provenance and checksums will be recorded before analysis. Reported claims must be generated from the checked-in workflow; flagged records are audit candidates, not allegations of fraud.
