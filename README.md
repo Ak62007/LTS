@@ -88,6 +88,10 @@ all three from the repository root with:
 uv run python notebooks/build_executed_notebooks.py
 ```
 
+Before preparing the report or presentation, review
+`report/SYLLABUS_ALIGNMENT.md`. It maps every current method to ED409 and
+identifies supporting concepts that require a short explanation.
+
 ## Reproducibility policy
 
 All random sampling and splitting uses seed `42`. Raw data provenance and checksums will be recorded before analysis. Reported claims must be generated from the checked-in workflow; flagged records are audit candidates, not allegations of fraud.
