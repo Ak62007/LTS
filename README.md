@@ -81,12 +81,19 @@ to the frozen model specification:
 2. `notebooks/02_fast_lts_validation_and_scalability.ipynb`
 3. `notebooks/03_training_eda_and_model_specification.ipynb`
 4. `notebooks/04_clean_ols_and_lts_comparison.ipynb`
+5. `notebooks/05_contamination_stress_test.ipynb`
 
 Every code cell is executed and its output is stored in the notebook. Rebuild
 all three from the repository root with:
 
 ```bash
 uv run python notebooks/build_executed_notebooks.py
+```
+
+Run the controlled 5% training-response contamination experiment with:
+
+```bash
+uv run python -m src.taxi_lts.stress_test
 ```
 
 Before preparing the report or presentation, review

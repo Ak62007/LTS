@@ -898,6 +898,165 @@ $100 response contamination can be detected separately from genuine records.
     )
 
 
+def build_contamination_notebook() -> nbformat.NotebookNode:
+    """Create the controlled-contamination teaching notebook."""
+    return notebook(
+        [
+            markdown(
+                r"""
+# 05 — Controlled $100 response-contamination stress test
+
+This experiment illustrates the robustness property of LTS from ED409 Module
+II. It is not an attempt to claim that genuine taxi records are corrupted.
+
+Exactly 2,000 of 40,000 training rows (5%) were selected without replacement
+using seed 42. Exactly $100 was added to their fare responses. Predictors and
+the entire 10,000-row clean test set remained unchanged. Clean and contaminated
+models use the same training-fitted scaling and are evaluated on the same clean
+test observations.
+"""
+            ),
+            code(
+                """
+from pathlib import Path
+import json
+
+import matplotlib.pyplot as plt
+import pandas as pd
+from IPython.display import display
+
+PROJECT_ROOT = Path.cwd()
+TABLES = PROJECT_ROOT / "outputs/tables"
+metadata = json.loads((PROJECT_ROOT / "outputs/contamination_metadata.json").read_text())
+display(pd.Series(metadata, name="Value").to_frame())
+"""
+            ),
+            markdown(
+                r"""
+## 1. Experimental design
+
+Only the response is altered:
+
+\[
+y_i^{*}=y_i+100 \quad\text{for selected training rows}.
+\]
+
+This is vertical response contamination. It does not create high-leverage
+predictor values. OLS minimizes all squared residuals, whereas raw LTS at
+`alpha = 0.75` minimizes the 30,000 smallest squared residuals. The clean fit
+was frozen before the contaminated fit was examined.
+"""
+            ),
+            markdown(
+                r"""
+## 2. Clean-test performance degradation
+
+The test set remains clean. Any change in its performance is therefore caused
+by learning from the contaminated training response, not by changing the
+evaluation data.
+"""
+            ),
+            code(
+                """
+performance = pd.read_csv(TABLES / "contamination_model_performance.csv")
+degradation = pd.read_csv(TABLES / "contamination_prediction_degradation.csv")
+display(performance.style.format(precision=3))
+display(degradation.style.format(precision=3))
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4.2))
+for axis, metric in zip(axes, ["mae", "rmse"], strict=True):
+    pivot = performance.pivot(index="estimator", columns="training_scenario", values=metric)
+    pivot.plot.bar(ax=axis, color=["#315C7C", "#9B2226"])
+    axis.set(title=f"Clean-test {metric.upper()}", ylabel="USD", xlabel="")
+    axis.tick_params(axis="x", rotation=0)
+plt.tight_layout()
+plt.show()
+"""
+            ),
+            markdown(
+                r"""
+### Interpretation
+
+After contamination, OLS test MAE rises from $2.09 to $5.38 and RMSE from
+$3.25 to $5.94; R-squared falls from 0.923 to 0.745. Reweighted LTS is stable:
+MAE changes from $1.015 to $1.000 and RMSE from $8.756 to $8.737. The tiny LTS
+improvement is sampling variation, not evidence that contamination helps.
+
+This experiment demonstrates resistance: LTS preserves almost the same fitted
+relationship when a minority of training responses is shifted severely.
+"""
+            ),
+            markdown(
+                r"""
+## 3. Coefficient stability
+
+Coefficient change is calculated in original predictor units. Percent changes
+for coefficients already near zero can look large, so absolute changes and the
+substantively important intercept, distance, and duration slopes should receive
+more attention.
+"""
+            ),
+            code(
+                """
+coefficient_change = pd.read_csv(TABLES / "contamination_coefficient_change.csv")
+display(coefficient_change.style.format(precision=4))
+
+slopes = coefficient_change.loc[coefficient_change["term"].ne("const")]
+pivot = slopes.pivot(index="term", columns="estimator", values="absolute_change_magnitude")
+pivot.plot.bar(figsize=(9, 4.5), color=["#9B2226", "#315C7C"])
+plt.ylabel("Absolute coefficient change")
+plt.title("Coefficient stability after +$100 contamination")
+plt.xticks(rotation=35, ha="right")
+plt.tight_layout()
+plt.show()
+"""
+            ),
+            markdown(
+                r"""
+The OLS intercept increases by $4.83, close to the unconditional mean shift
+`0.05 × $100 = $5`. Several OLS time and weekend coefficients also move.
+Reweighted LTS's intercept changes by only $0.025, its distance slope by about
+$0.020 per mile, and its duration slope by about $0.0005 per minute.
+
+## 4. Known-contamination detection
+
+Primary LTS flags rows receiving zero reweighting weight or absolute robust
+standardized residual above 2.5. Because the artificial rows are known, recall
+and precision can be calculated exactly.
+"""
+            ),
+            code(
+                """
+detection = pd.read_csv(TABLES / "contamination_detection_summary.csv")
+detail = pd.read_csv(TABLES / "contamination_detection_detail.csv")
+display(detection.style.format(precision=4))
+display(detail.loc[detail["known_artificial_contamination"]].head(15).style.format(precision=3))
+"""
+            ),
+            markdown(
+                r"""
+LTS flags all 2,000 artificial corruptions: recall is 100% and there are no
+false negatives. It also flags 5,684 unaltered training rows, so precision is
+26.0% and the false-positive rate is about 15.0%.
+
+This does not mean the additional rows are statistical mistakes. They may be
+rare tariffs, recording problems, omitted route effects, or legitimate unusual
+trips. The result supports using LTS flags for **audit prioritization**, not
+automatic fraud classification.
+
+## Presentation statement
+
+> Under a controlled 5% +$100 response shift, OLS coefficients and clean-test
+> predictions deteriorated substantially. Reweighted LTS preserved its clean
+> relationship and detected every artificial corruption. However, its broad
+> audit screen had low precision because many genuine unusual trips were also
+> incompatible with the dominant relationship.
+"""
+            ),
+        ]
+    )
+
+
 def execute_and_write(document: nbformat.NotebookNode, filename: str) -> None:
     """Execute a notebook from the project root and write the executed file."""
     client = NotebookClient(
@@ -927,6 +1086,9 @@ def main() -> None:
     )
     execute_and_write(
         build_clean_model_notebook(), "04_clean_ols_and_lts_comparison.ipynb"
+    )
+    execute_and_write(
+        build_contamination_notebook(), "05_contamination_stress_test.ipynb"
     )
 
 

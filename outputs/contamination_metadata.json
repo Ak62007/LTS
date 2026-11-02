@@ -1,0 +1,17 @@
+{
+  "scope": "controlled training-response contamination",
+  "training_observations": 40000,
+  "test_observations": 10000,
+  "contaminated_training_observations": 2000,
+  "contamination_fraction": 0.05,
+  "fare_addition_usd": 100.0,
+  "seed": 42,
+  "alpha": 0.75,
+  "initial_subsets": 500,
+  "test_set_unchanged": true,
+  "input_csv_sha256": "9325f572dc4d2036b2df67f2f2e63350a3b88bc52b8b7cde84b7d1f727a7fe39",
+  "contaminated_source_id_sha256": "7666863864ac07b4991ff0da2bf749c8b6c9d08670d6e2a7357d6fa7ddbcca76",
+  "detection_recall": 1.0,
+  "detection_precision": 0.2602811035918792,
+  "false_positive_rate": 0.14957894736842106
+}

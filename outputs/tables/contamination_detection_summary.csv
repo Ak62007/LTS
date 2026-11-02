@@ -1,0 +1,2 @@
+training_observations,known_contaminated,flagged_total,true_positive,false_positive,false_negative,true_negative,detection_recall,detection_precision,false_positive_rate,raw_mad_scale,reweighting_cutoff,audit_residual_cutoff
+40000,2000,7684,2000,5684,0,32316,1.0000000000,0.2602811036,0.1495789474,0.5533471549,2.2414027276,2.5000000000
