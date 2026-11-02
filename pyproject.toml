@@ -10,7 +10,12 @@ dependencies = [
     "nbformat>=5.10",
     "numpy>=2.0",
     "pandas>=2.2",
+    "pdf2image>=1.17",
+    "pdfplumber>=0.11",
     "pyarrow>=17.0",
+    "pypdf>=5.0",
+    "python-docx>=1.1",
+    "reportlab>=4.2",
     "robpy==0.0.6",
     "scikit-learn>=1.5",
     "seaborn>=0.13",
@@ -44,3 +49,6 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"report/create_training_eda_report.py" = ["E501"]
