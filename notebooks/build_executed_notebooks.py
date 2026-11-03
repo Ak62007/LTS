@@ -1054,26 +1054,47 @@ red points are observations receiving +$100.
 Because the models contain six predictors, the displayed points are restricted
 to comparable trips: one passenger, weekday, around noon, and a narrow band
 around the median of the other continuous predictor. Each conditional fitted
-line uses the corresponding exact reference trip. The broken axis shows both
-the ordinary fare pattern and the artificial outlier band without compressing
-the fitted lines.
+line uses the corresponding exact reference trip. One figure shows the shifted
+red observations on the full dollar scale. The other uses identical axes for
+the ordinary fare range before and after contamination, with only OLS and LTS
+in each panel. All models use the full training sample; display restrictions
+and the seed-42 subsample of grey points affect only visualization.
 """
             ),
             code(
                 """
 from IPython.display import Image
+from src.taxi_lts.plot_actual_points import save_comparable_trip_plots
+from src.taxi_lts.stress_test import contaminate_training_response
 
+modeling = pd.read_csv(PROJECT_ROOT / "data/processed/taxi_modeling_50000.csv")
+training = modeling.loc[modeling["split"].eq("train")].copy()
+_, known_mask = contaminate_training_response(training)
+coefficients = pd.read_csv(TABLES / "contamination_coefficient_change.csv")
+plot_details = save_comparable_trip_plots(
+    training, coefficients, known_mask, PROJECT_ROOT / "outputs/figures"
+)
+display(pd.Series(plot_details, name="Display design").to_frame())
+display(Image(filename=PROJECT_ROOT / "outputs/figures/actual_contamination_overview.png"))
 display(Image(filename=PROJECT_ROOT / "outputs/figures/actual_points_clean_stress_fitted_lines.png"))
 """
             ),
             markdown(
                 r"""
-The red band is the controlled contamination that pulls stressed OLS upward.
-The dashed blue stressed-OLS line separates visibly from clean OLS. In contrast,
-the solid and dashed LTS lines nearly overlap: trimming prevents the red band
-from determining the fitted relationship. LTS also follows the dense central
-fare-duration pattern more strongly, whereas OLS places much greater weight on
-distance because of the influential genuine tail observations.
+The red band is the controlled contamination. In the ordinary-fare figure,
+blue denotes OLS and orange denotes LTS in both panels. The OLS profile shifts
+upward by roughly $5, while the LTS profile barely moves. Grey points remain
+visible so the change can be compared with the observed duration-fare pattern.
+The dollar-valued arrow measures the OLS prediction change at one fixed trip
+profile. It is a conditional illustration and does not establish which model
+has lower error across every trip in the dataset.
+
+The displayed group has 1,038 comparable trips. We sample 250 unaltered trips
+for legible points and include all 48 artificially shifted trips in that group.
+The lines evaluate the saved full-training coefficients at distance 1.53 miles,
+one passenger, weekday and noon; only duration varies. No regression is refitted
+to this smaller display group. The axis limits are a visual zoom, not a filter
+applied to the modelling dataset.
 
 ## Presentation statement
 
