@@ -37,12 +37,9 @@ def fit_reweighted_fast_lts(
 ) -> ReweightedLTSResult:
     """Fit raw FAST-LTS and reweight using its MAD-standardized residuals.
 
-    RobPy's built-in reweighting divides the raw residuals by their conventional
-    standard deviation. Because a small number of extreme residuals can inflate
-    that value, this wrapper deliberately fits RobPy's raw estimator and applies
-    an explicit robust reweighting step. The default cutoff is the square root
-    of the 97.5th percentile of a chi-squared distribution with one degree of
-    freedom, approximately 2.24.
+    Built-in reweighting is disabled in favour of MAD scaling. The default
+    cutoff is the square root of the chi-squared 0.975 quantile with one degree
+    of freedom, approximately 2.24.
     """
     X_array = np.asarray(X, dtype=float)
     y_array = np.asarray(y, dtype=float).reshape(-1)

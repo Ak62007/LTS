@@ -10,7 +10,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from report.build_latex_assets import ROOT, create_tables, draw_actual_points
 
-SOURCE = ROOT / "report/latex/ED409_LTS_Final_Report.tex"
+SOURCE = ROOT / "report/latex/ED409_LTS_Report.tex"
 DESTINATION = ROOT / "report"
 
 
@@ -23,7 +23,6 @@ def package_source() -> Path:
     entries = {
         SOURCE.name: SOURCE,
         "README.md": SOURCE.parent / "README.md",
-        "REVIEW_LOG.md": SOURCE.parent / "REVIEW_LOG.md",
         **{
             f"generated/{path.name}": path
             for path in sorted((SOURCE.parent / "generated").glob("*"))

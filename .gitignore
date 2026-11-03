@@ -16,6 +16,7 @@ data/raw/*
 
 # Temporary render products
 report/rendered/
+report/ED409_LTS_LaTeX_Source/
 presentation/rendered/
 *.tmp
 *.aux

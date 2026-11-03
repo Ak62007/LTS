@@ -1,123 +1,80 @@
 # Robust Detection of Anomalous Taxi Fares Using Least Trimmed Squares Regression
 
-Course assignment repository for comparing ordinary least squares (OLS) with least trimmed squares (LTS) on January 2026 NYC Yellow Taxi trips.
+**Aditya Kumar — IED/10007/23 · ED409 Regression Techniques**
 
-**Student:** Aditya Kumar  
-**Enrollment:** IED/10007/23
+OLS and reweighted FAST-LTS analysis of January 2026 NYC Yellow Taxi records.
+The fixed modelling sample contains 50,000 trips: 40,000 training observations
+and 10,000 evaluation observations. Sampling and model initialization use seed 42.
+The stress test adds $100 to 5% of training fares and leaves evaluation data unchanged.
 
-## Planned workflow
+## Files
 
-1. Acquire and verify the official NYC TLC Yellow Taxi Parquet file.
-2. Apply documented quality filters and create a deterministic 10,000-row sample.
-3. Compare OLS and reweighted FAST-LTS on clean and deliberately contaminated training data.
-4. Export auditable tables, figures, an executed notebook, the written assignment, and a nine-slide presentation.
+- `data/`: source metadata, ignored raw Parquet, and processed samples.
+- `src/taxi_lts/`: preparation, fitting, diagnostics, and stress-test modules.
+- `notebooks/`: six executed notebooks containing code and saved outputs.
+- `outputs/`: verified figures, CSV tables, and analysis metadata.
+- `report/ED409_LTS_Report.pdf`: final report.
+- `report/latex/ED409_LTS_Report.tex`: editable report source.
+- `report/ED409_LTS_LaTeX_Source.zip`: standalone LaTeX source package.
+- `tests/`: data, split, estimator, contamination, and notebook checks.
 
-## Repository layout
+## Environment and analysis
 
-- `data/raw/` — untouched source data (ignored by Git)
-- `data/processed/` — reproducible analysis-ready data
-- `notebooks/` — executed analysis notebook
-- `src/taxi_lts/` — reusable preparation and modelling code
-- `tests/` — deterministic and synthetic validation tests
-- `outputs/` — generated figures and machine-readable tables
-- `report/` — editable report and final PDF
-- `presentation/` — slide deck and render checks
-
-## Setup
-
-Install [uv](https://docs.astral.sh/uv/), then run:
+Install [uv](https://docs.astral.sh/uv/) and run from the repository root:
 
 ```bash
 uv sync
+uv run python -m src.taxi_lts.prepare_data
+uv run python -m src.taxi_lts.split_data
+uv run python -m src.taxi_lts.explore_training
+uv run python -m src.taxi_lts.run_analysis
+uv run python -m src.taxi_lts.stress_test
 uv run pytest
 ```
 
-Prepare the verified January 2026 data sample with:
+Data preparation also reproduces the initial 10,000-row exploratory sample.
+The final model comparison uses `data/processed/taxi_modeling_50000.csv`.
+See [data/README.md](data/README.md) for provenance and eligibility rules.
 
-```bash
-uv run python -m src.taxi_lts.prepare_data
-```
-
-The command verifies the raw-file checksum, applies the documented eligibility
-rules, produces a deterministic 10,000-record sample, and exports data-quality
-tables. See `data/README.md` for the detailed data policy.
-
-Validate FAST-LTS on a known contaminated linear relationship with:
+Synthetic estimator validation and the optional scalability benchmark:
 
 ```bash
 uv run python -m src.taxi_lts.validate_lts
-```
-
-Run the guarded scalability benchmark one sample size at a time with:
-
-```bash
-uv run python -m src.taxi_lts.benchmark_lts --sample-size 10000
-uv run python -m src.taxi_lts.benchmark_lts --sample-size 25000
 uv run python -m src.taxi_lts.benchmark_lts --sample-size 50000
 ```
 
-The benchmark uses deterministic nested samples, 500 FAST-LTS starting subsets,
-and a two-thread numerical-library limit. Results are written to
-`outputs/tables/lts_scalability_benchmark.csv`.
+Model-fitting workflows limit numerical libraries to two threads.
 
-Create the fixed 50,000-record modelling sample and its 80/20 split with:
+## Notebooks and report
 
-```bash
-uv run python -m src.taxi_lts.split_data
-```
-
-Run training-only exploratory and model-specification diagnostics with:
+The notebooks are numbered in analysis order: data preparation, estimator
+validation, training diagnostics, clean-model comparison, contamination, and
+report execution evidence. Open them from the repository root with:
 
 ```bash
-uv run python -m src.taxi_lts.explore_training
+uv run jupyter lab
 ```
 
-## Executed teaching notebooks
+Regenerate notebooks 01–05 and notebook 06 with:
 
-Open the notebooks in this order to follow the completed work from source data
-to the frozen model specification:
+```bash
+uv run python -m notebooks.build_executed_notebooks
+uv run python -m report.build_execution_evidence
+```
 
-1. `notebooks/01_data_preparation_sampling_and_split.ipynb`
-2. `notebooks/02_fast_lts_validation_and_scalability.ipynb`
-3. `notebooks/03_training_eda_and_model_specification.ipynb`
-4. `notebooks/04_clean_ols_and_lts_comparison.ipynb`
-5. `notebooks/05_contamination_stress_test.ipynb`
-6. `notebooks/06_final_report_execution_evidence.ipynb` (exact report excerpts)
+These commands execute code; notebook 06 also regenerates the report's code
+images. All six notebooks contain code cells only, with execution outputs retained.
 
-The final report is now written in **LaTeX**. The submission PDF is
-`report/ED409_LTS_Final_Report.pdf`, with editable source in
-`report/latex/ED409_LTS_Final_Report.tex` and a complete portable package at
-`report/ED409_LTS_LaTeX_Source.zip`. Its first two pages contain the case,
-dataset introduction, and business questions; the solution starts on page 3.
-Rebuild the final PDF and source ZIP with Tectonic installed:
+With Tectonic installed, rebuild the PDF and standalone source ZIP:
 
 ```bash
 uv run python -m report.build_latex_report
 ```
 
-See `report/latex/README.md` for standalone compilation and editing guidance,
-and `report/latex/REVIEW_LOG.md` for the iterative review. The earlier DOCX and
-its builder are retained as a previous edition. They do not update the LaTeX
-report. `report/build_final_report.py` also regenerates notebook 06 and the
-executed-code images; use it only when that evidence needs refreshing.
+See [report/latex/README.md](report/latex/README.md) for editing and standalone
+compilation. [report/SYLLABUS_ALIGNMENT.md](report/SYLLABUS_ALIGNMENT.md) records
+the course concepts and presentation preparation notes.
 
-Every code cell is executed and its output is stored in the notebook. Rebuild
-notebooks 01-05 from the repository root with:
-
-```bash
-uv run python notebooks/build_executed_notebooks.py
-```
-
-Run the controlled 5% training-response contamination experiment with:
-
-```bash
-uv run python -m src.taxi_lts.stress_test
-```
-
-Before preparing the report or presentation, review
-`report/SYLLABUS_ALIGNMENT.md`. It maps every current method to ED409 and
-identifies supporting concepts that require a short explanation.
-
-## Reproducibility policy
-
-All random sampling and splitting uses seed `42`. Raw data provenance and checksums will be recorded before analysis. Reported claims must be generated from the checked-in workflow; flagged records are audit candidates, not allegations of fraud.
+Raw source data remain unchanged. Fit preprocessing on training rows only,
+use the CSV results as the source of reported values, and interpret flags as
+audit candidates rather than proven fraud.
