@@ -24,3 +24,9 @@ presentation/rendered/
 *.out
 *.synctex.gz
 .DS_Store
+
+# Local-only project files
+/report/
+/AGENTS.md
+/Agents.md
+/notebooks/build_executed_notebooks.py

@@ -13,9 +13,6 @@ The stress test adds $100 to 5% of training fares and leaves evaluation data unc
 - `src/taxi_lts/`: preparation, fitting, diagnostics, and stress-test modules.
 - `notebooks/`: six executed notebooks containing code and saved outputs.
 - `outputs/`: verified figures, CSV tables, and analysis metadata.
-- `report/ED409_LTS_Report.pdf`: final report.
-- `report/latex/ED409_LTS_Report.tex`: editable report source.
-- `report/ED409_LTS_LaTeX_Source.zip`: standalone LaTeX source package.
 - `tests/`: data, split, estimator, contamination, and notebook checks.
 
 ## Environment and analysis
@@ -45,7 +42,7 @@ uv run python -m src.taxi_lts.benchmark_lts --sample-size 50000
 
 Model-fitting workflows limit numerical libraries to two threads.
 
-## Notebooks and report
+## Notebooks
 
 The notebooks are numbered in analysis order: data preparation, estimator
 validation, training diagnostics, clean-model comparison, contamination, and
@@ -55,25 +52,9 @@ report execution evidence. Open them from the repository root with:
 uv run jupyter lab
 ```
 
-Regenerate notebooks 01–05 and notebook 06 with:
-
-```bash
-uv run python -m notebooks.build_executed_notebooks
-uv run python -m report.build_execution_evidence
-```
-
-These commands execute code; notebook 06 also regenerates the report's code
-images. All six notebooks contain code cells only, with execution outputs retained.
-
-With Tectonic installed, rebuild the PDF and standalone source ZIP:
-
-```bash
-uv run python -m report.build_latex_report
-```
-
-See [report/latex/README.md](report/latex/README.md) for editing and standalone
-compilation. [report/SYLLABUS_ALIGNMENT.md](report/SYLLABUS_ALIGNMENT.md) records
-the course concepts and presentation preparation notes.
+All six notebooks contain code cells only, with execution outputs retained.
+Report files, repository guidance, and notebook-generation helpers are kept
+locally and excluded from version control.
 
 Raw source data remain unchanged. Fit preprocessing on training rows only,
 use the CSV results as the source of reported values, and interpret flags as
