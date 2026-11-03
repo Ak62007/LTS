@@ -14,6 +14,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 from threadpoolctl import threadpool_limits
@@ -306,8 +307,10 @@ def model_predictions(
     return model.predict(scaler.transform(frame[PREDICTORS].to_numpy(dtype=float)))
 
 
-def save_model_geometry_figures(
+def save_actual_points_fitted_lines(
     training: pd.DataFrame,
+    contaminated_y: np.ndarray,
+    known_mask: np.ndarray,
     scaler: StandardScaler,
     clean_ols: LinearRegression,
     clean_lts: ReweightedLTSResult,
@@ -315,7 +318,7 @@ def save_model_geometry_figures(
     contaminated_lts: ReweightedLTSResult,
     figures_dir: Path,
 ) -> None:
-    """Visualize conditional fitted lines and surfaces without PCA distortion."""
+    """Plot actual clean/contaminated points with marginal fitted lines."""
     reference = reference_predictor_values(training)
     models = [
         ("Clean OLS", clean_ols, "#1F77B4", "-"),
@@ -323,98 +326,178 @@ def save_model_geometry_figures(
         ("Clean LTS", clean_lts.reweighted_model, "#B22222", "-"),
         ("Stressed LTS", contaminated_lts.reweighted_model, "#B22222", "--"),
     ]
-    profile_specs = [
-        ("trip_distance", "Trip distance miles", 0.995),
-        ("duration_min", "Duration minutes", 0.995),
+    median_duration = reference["duration_min"]
+    median_distance = reference["trip_distance"]
+    common_slice = (
+        training["passenger_count"].eq(1)
+        & training["is_weekend"].eq(0)
+        & training["pickup_hour"].between(11, 13)
+    ).to_numpy()
+    variables = [
+        (
+            "trip_distance",
+            "Trip distance miles",
+            common_slice
+            & training["duration_min"]
+            .between(median_duration - 2, median_duration + 2)
+            .to_numpy(),
+            f"duration within {median_duration - 2:.1f}-{median_duration + 2:.1f} min",
+        ),
+        (
+            "duration_min",
+            "Duration minutes",
+            common_slice
+            & training["trip_distance"]
+            .between(median_distance - 0.35, median_distance + 0.35)
+            .to_numpy(),
+            (
+                f"distance within {median_distance - 0.35:.2f}-"
+                f"{median_distance + 0.35:.2f} mi"
+            ),
+        ),
     ]
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.6))
-    for axis, (variable, label, quantile) in zip(axes, profile_specs, strict=True):
-        grid = np.linspace(0, training[variable].quantile(quantile), 200)
-        frame = pd.DataFrame([reference] * len(grid))
-        frame[variable] = grid
+    figure = plt.figure(figsize=(13, 8.5))
+    grid_spec = figure.add_gridspec(
+        2, 2, height_ratios=[1, 2.5], hspace=0.05, wspace=0.18
+    )
+    bottom_axes = []
+    for column, (variable, label, comparable_slice, slice_label) in enumerate(
+        variables
+    ):
+        top_axis = figure.add_subplot(grid_spec[0, column])
+        bottom_axis = figure.add_subplot(grid_spec[1, column], sharex=top_axis)
+        bottom_axes.append(bottom_axis)
+        x_limit = float(training.loc[comparable_slice, variable].quantile(0.995))
+        visible = comparable_slice & training[variable].le(x_limit).to_numpy()
+        unchanged = visible & ~known_mask
+        artificial = visible & known_mask
+        x = training[variable].to_numpy(dtype=float)
+        for axis in [top_axis, bottom_axis]:
+            axis.scatter(
+                x[unchanged],
+                contaminated_y[unchanged],
+                s=4,
+                color="#4A4A4A",
+                alpha=0.055,
+                linewidths=0,
+                rasterized=True,
+            )
+            axis.scatter(
+                x[artificial],
+                contaminated_y[artificial],
+                s=8,
+                color="#D62728",
+                alpha=0.32,
+                linewidths=0,
+                rasterized=True,
+            )
+            axis.set_xlim(0, x_limit)
+            axis.grid(alpha=0.18)
+
+        x_grid = np.linspace(0, x_limit, 220)
+        frame = pd.DataFrame([reference] * len(x_grid))
+        frame[variable] = x_grid
         for model_label, model, color, linestyle in models:
-            axis.plot(
-                grid,
+            bottom_axis.plot(
+                x_grid,
                 model_predictions(scaler, frame, model),
                 label=model_label,
                 color=color,
                 linestyle=linestyle,
-                linewidth=2.2,
+                linewidth=2.6,
+                zorder=5,
             )
-        fixed_variable = (
-            "duration fixed at median"
-            if variable == "trip_distance"
-            else "distance fixed at median"
-        )
-        axis.set(
-            xlabel=label,
-            ylabel="Predicted fare USD",
-            title=f"Varying {label.lower()}\n{fixed_variable}",
-        )
-        axis.grid(alpha=0.25)
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=4, frameon=False)
-    fig.suptitle(
-        "Conditional fitted profiles: clean versus stressed estimators",
-        fontsize=14,
-    )
-    fig.tight_layout(rect=(0, 0.10, 1, 0.94))
-    fig.savefig(figures_dir / "clean_stress_fitted_profiles.png", dpi=220)
-    plt.close(fig)
 
-    distance = np.linspace(0, training["trip_distance"].quantile(0.99), 80)
-    duration = np.linspace(1, training["duration_min"].quantile(0.99), 80)
-    distance_grid, duration_grid = np.meshgrid(distance, duration)
-    surface_frame = pd.DataFrame(
-        {name: np.full(distance_grid.size, value) for name, value in reference.items()}
-    )
-    surface_frame["trip_distance"] = distance_grid.ravel()
-    surface_frame["duration_min"] = duration_grid.ravel()
-    predictions = [
-        model_predictions(scaler, surface_frame, model).reshape(distance_grid.shape)
-        for _, model, _, _ in models
+        upper_limit = max(130.0, float(np.quantile(contaminated_y[artificial], 0.995)))
+        top_axis.set_ylim(90, upper_limit)
+        bottom_axis.set_ylim(0, 85)
+        top_axis.spines["bottom"].set_visible(False)
+        bottom_axis.spines["top"].set_visible(False)
+        top_axis.tick_params(labeltop=False, bottom=False, labelbottom=False)
+        bottom_axis.tick_params(top=False)
+        diagonal = 0.012
+        top_axis.plot(
+            (-diagonal, +diagonal),
+            (-diagonal, +diagonal),
+            transform=top_axis.transAxes,
+            color="black",
+            clip_on=False,
+        )
+        top_axis.plot(
+            (1 - diagonal, 1 + diagonal),
+            (-diagonal, +diagonal),
+            transform=top_axis.transAxes,
+            color="black",
+            clip_on=False,
+        )
+        bottom_axis.plot(
+            (-diagonal, +diagonal),
+            (1 - diagonal, 1 + diagonal),
+            transform=bottom_axis.transAxes,
+            color="black",
+            clip_on=False,
+        )
+        bottom_axis.plot(
+            (1 - diagonal, 1 + diagonal),
+            (1 - diagonal, 1 + diagonal),
+            transform=bottom_axis.transAxes,
+            color="black",
+            clip_on=False,
+        )
+        top_axis.set_title(
+            f"Experimental fare versus {label.lower()}\n"
+            f"One passenger, weekday, 11:00-13:59; {slice_label}"
+        )
+        bottom_axis.set_xlabel(label)
+        if column == 0:
+            top_axis.set_ylabel("Experimental fare USD")
+            bottom_axis.set_ylabel("Experimental fare USD")
+
+    legend_handles = [
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor="#4A4A4A",
+            markersize=6,
+            label="Unchanged actual trip",
+        ),
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor="#D62728",
+            markersize=6,
+            label="Artificially shifted trip",
+        ),
+        *[
+            Line2D(
+                [0],
+                [0],
+                color=color,
+                linestyle=linestyle,
+                linewidth=2.6,
+                label=model_label,
+            )
+            for model_label, _, color, linestyle in models
+        ],
     ]
-    lower = min(float(values.min()) for values in predictions)
-    upper = max(float(values.max()) for values in predictions)
-    levels = np.linspace(lower, upper, 18)
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8), sharex=True, sharey=True)
-    contour = None
-    for axis, (model_label, _, _, _), values in zip(
-        axes.flat, models, predictions, strict=True
-    ):
-        contour = axis.contourf(
-            distance_grid,
-            duration_grid,
-            values,
-            levels=levels,
-            cmap="viridis",
-            extend="both",
-        )
-        axis.contour(
-            distance_grid,
-            duration_grid,
-            values,
-            levels=levels[::3],
-            colors="white",
-            linewidths=0.45,
-            alpha=0.7,
-        )
-        axis.set_title(model_label)
-        axis.set_xlabel("Trip distance miles")
-        axis.set_ylabel("Duration minutes")
-    fig.suptitle(
-        "Conditional distance-duration prediction surfaces\n"
-        "One passenger, weekday, noon",
-        fontsize=14,
+    figure.legend(
+        handles=legend_handles,
+        loc="lower center",
+        ncol=3,
+        frameon=False,
+        bbox_to_anchor=(0.5, 0.01),
     )
-    fig.subplots_adjust(
-        left=0.08, right=0.83, bottom=0.08, top=0.88, wspace=0.18, hspace=0.25
+    figure.suptitle(
+        "Comparable actual trips and multivariable conditional fitted lines",
+        fontsize=15,
     )
-    if contour is not None:
-        color_axis = fig.add_axes([0.87, 0.15, 0.025, 0.66])
-        fig.colorbar(contour, cax=color_axis, label="Predicted fare USD")
-    fig.savefig(figures_dir / "clean_stress_prediction_surfaces.png", dpi=220)
-    plt.close(fig)
+    figure.subplots_adjust(left=0.07, right=0.98, bottom=0.15, top=0.88)
+    figure.savefig(figures_dir / "actual_points_clean_stress_fitted_lines.png", dpi=220)
+    plt.close(figure)
 
 
 def run_stress_test(
@@ -465,8 +548,10 @@ def run_stress_test(
     write_csv(detection, tables_dir / "contamination_detection_summary.csv")
     write_csv(detection_detail, tables_dir / "contamination_detection_detail.csv")
     save_figures(performance, coefficient_change, figures_dir)
-    save_model_geometry_figures(
+    save_actual_points_fitted_lines(
         training,
+        contaminated_y,
+        known_mask,
         scaler,
         clean_ols,
         clean_lts,

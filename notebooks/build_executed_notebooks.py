@@ -1044,31 +1044,36 @@ rare tariffs, recording problems, omitted route effects, or legitimate unusual
 trips. The result supports using LTS flags for **audit prioritization**, not
 automatic fraud classification.
 
-## 5. What the fitted relationships are doing
+## 5. Actual observations and fitted lines
 
-PCA is not used for these plots. PCA ignores fare when constructing components,
-and a line against the first component would not faithfully represent either
-six-predictor regression. Instead, the reference-profile plots vary one
-predictor while holding the others at a valid stated trip. The response-surface
-plots vary distance and duration together while fixing one passenger, weekday,
-and noon.
+PCA is not used because it would hide the original predictor meanings and would
+not faithfully display the fitted six-predictor regressions. The plot below
+contains actual training observations. Grey points are unchanged records and
+red points are observations receiving +$100.
+
+Because the models contain six predictors, the displayed points are restricted
+to comparable trips: one passenger, weekday, around noon, and a narrow band
+around the median of the other continuous predictor. Each conditional fitted
+line uses the corresponding exact reference trip. The broken axis shows both
+the ordinary fare pattern and the artificial outlier band without compressing
+the fitted lines.
 """
             ),
             code(
                 """
 from IPython.display import Image
 
-display(Image(filename=PROJECT_ROOT / "outputs/figures/clean_stress_fitted_profiles.png"))
-display(Image(filename=PROJECT_ROOT / "outputs/figures/clean_stress_prediction_surfaces.png"))
+display(Image(filename=PROJECT_ROOT / "outputs/figures/actual_points_clean_stress_fitted_lines.png"))
 """
             ),
             markdown(
                 r"""
-The solid and dashed LTS profiles nearly overlap, directly displaying its
-stability under contamination. The stressed OLS profile shifts upward, mainly
-through the intercept increase. The surfaces also reveal the deeper clean-data
-difference: OLS places much greater weight on distance, while LTS follows a
-joint distance-duration tariff-like plane.
+The red band is the controlled contamination that pulls stressed OLS upward.
+The dashed blue stressed-OLS line separates visibly from clean OLS. In contrast,
+the solid and dashed LTS lines nearly overlap: trimming prevents the red band
+from determining the fitted relationship. LTS also follows the dense central
+fare-duration pattern more strongly, whereas OLS places much greater weight on
+distance because of the influential genuine tail observations.
 
 ## Presentation statement
 
