@@ -1,5 +1,7 @@
-"""Validate that submitted teaching notebooks contain genuine executions."""
+"""Validate code-only notebooks and their saved executions."""
 
+import io
+import tokenize
 from pathlib import Path
 
 import nbformat
@@ -15,7 +17,7 @@ NOTEBOOKS = [
 ]
 
 
-def test_teaching_notebooks_are_fully_executed_without_errors() -> None:
+def test_notebooks_are_code_only_and_fully_executed_without_errors() -> None:
     """Require an execution count and no error output in every code cell."""
     for filename in NOTEBOOKS:
         path = PROJECT_ROOT / "notebooks" / filename
@@ -23,6 +25,12 @@ def test_teaching_notebooks_are_fully_executed_without_errors() -> None:
         code_cells = [cell for cell in document.cells if cell.cell_type == "code"]
 
         assert code_cells, f"{filename} has no code cells."
+        assert len(code_cells) == len(document.cells), filename
+        assert not any(
+            token.type == tokenize.COMMENT
+            for cell in code_cells
+            for token in tokenize.generate_tokens(io.StringIO(cell.source).readline)
+        ), f"{filename} contains code comments."
         assert all(cell.execution_count is not None for cell in code_cells), (
             f"{filename} contains unexecuted code."
         )
