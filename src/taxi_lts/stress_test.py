@@ -500,6 +500,239 @@ def save_actual_points_fitted_lines(
     plt.close(figure)
 
 
+def save_clear_actual_points_comparison(
+    training: pd.DataFrame,
+    contaminated_y: np.ndarray,
+    known_mask: np.ndarray,
+    scaler: StandardScaler,
+    clean_ols: LinearRegression,
+    clean_lts: ReweightedLTSResult,
+    contaminated_ols: LinearRegression,
+    contaminated_lts: ReweightedLTSResult,
+    figures_dir: Path,
+) -> None:
+    """Create a readable three-panel actual-point robustness illustration."""
+    reference = reference_predictor_values(training)
+    median_distance = reference["trip_distance"]
+    comparable = (
+        training["passenger_count"].eq(1)
+        & training["is_weekend"].eq(0)
+        & training["pickup_hour"].between(11, 13)
+        & training["trip_distance"].between(
+            median_distance - 0.35, median_distance + 0.35
+        )
+    ).to_numpy()
+    artificial_positions = np.flatnonzero(comparable & known_mask)
+    unchanged_positions = np.flatnonzero(comparable & ~known_mask)
+    rng = np.random.default_rng(RANDOM_SEED)
+    unchanged_sample = rng.choice(
+        unchanged_positions,
+        size=min(250, len(unchanged_positions)),
+        replace=False,
+    )
+    displayed_positions = np.sort(
+        np.concatenate([unchanged_sample, artificial_positions])
+    )
+    duration = training["duration_min"].to_numpy(dtype=float)
+    original_fare = training[TARGET].to_numpy(dtype=float)
+    x_limit = float(training.loc[comparable, "duration_min"].quantile(0.995))
+    duration_grid = np.linspace(1, x_limit, 220)
+    profile = pd.DataFrame([reference] * len(duration_grid))
+    profile["duration_min"] = duration_grid
+    clean_ols_line = model_predictions(scaler, profile, clean_ols)
+    clean_lts_line = model_predictions(scaler, profile, clean_lts.reweighted_model)
+    stressed_ols_line = model_predictions(scaler, profile, contaminated_ols)
+    stressed_lts_line = model_predictions(
+        scaler, profile, contaminated_lts.reweighted_model
+    )
+
+    ols_color = "#1F77B4"
+    lts_color = "#E68613"
+    artificial_color = "#D62728"
+    figure, axes = plt.subplots(1, 3, figsize=(15, 5.2), sharex=True)
+
+    axes[0].scatter(
+        duration[displayed_positions],
+        original_fare[displayed_positions],
+        s=22,
+        color="#555555",
+        alpha=0.55,
+        linewidths=0,
+        label="Actual clean trips",
+    )
+    axes[0].plot(
+        duration_grid,
+        clean_ols_line,
+        color=ols_color,
+        linewidth=3,
+        label="Clean OLS",
+    )
+    axes[0].plot(
+        duration_grid,
+        clean_lts_line,
+        color=lts_color,
+        linewidth=3,
+        label="Clean LTS",
+    )
+    axes[0].set_ylim(0, 55)
+    axes[0].set_title("A. Original training fares")
+
+    axes[1].scatter(
+        duration[unchanged_sample],
+        contaminated_y[unchanged_sample],
+        s=22,
+        color="#555555",
+        alpha=0.55,
+        linewidths=0,
+        label="Unchanged trips",
+    )
+    axes[1].scatter(
+        duration[artificial_positions],
+        contaminated_y[artificial_positions],
+        s=30,
+        color=artificial_color,
+        alpha=0.75,
+        linewidths=0,
+        label="+$100 trips",
+    )
+    axes[1].plot(
+        duration_grid,
+        stressed_ols_line,
+        color=ols_color,
+        linestyle="--",
+        linewidth=3,
+        label="Stressed OLS",
+    )
+    axes[1].plot(
+        duration_grid,
+        stressed_lts_line,
+        color=lts_color,
+        linestyle="--",
+        linewidth=3,
+        label="Stressed LTS",
+    )
+    axes[1].set_ylim(0, 135)
+    axes[1].set_title("B. After 5% receive +$100")
+    axes[1].annotate(
+        "Artificial outlier band",
+        xy=(duration[artificial_positions].mean(), 112),
+        xytext=(x_limit * 0.48, 128),
+        arrowprops={"arrowstyle": "->", "color": artificial_color},
+        color=artificial_color,
+        fontsize=10,
+    )
+
+    axes[2].scatter(
+        duration[unchanged_sample],
+        contaminated_y[unchanged_sample],
+        s=22,
+        color="#555555",
+        alpha=0.55,
+        linewidths=0,
+    )
+    axes[2].plot(
+        duration_grid,
+        clean_ols_line,
+        color=ols_color,
+        linewidth=2.2,
+        label="Clean OLS",
+    )
+    axes[2].plot(
+        duration_grid,
+        stressed_ols_line,
+        color=ols_color,
+        linestyle="--",
+        linewidth=3,
+        label="Stressed OLS",
+    )
+    axes[2].plot(
+        duration_grid,
+        clean_lts_line,
+        color=lts_color,
+        linewidth=2.2,
+        label="Clean LTS",
+    )
+    axes[2].plot(
+        duration_grid,
+        stressed_lts_line,
+        color=lts_color,
+        linestyle="--",
+        linewidth=3,
+        label="Stressed LTS",
+    )
+    axes[2].set_ylim(0, 55)
+    axes[2].set_title("C. Zoom: how the lines moved")
+    axes[2].text(
+        0.04,
+        0.92,
+        "OLS shifts upward\nLTS lines overlap",
+        transform=axes[2].transAxes,
+        va="top",
+        bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.85},
+    )
+
+    for axis in axes:
+        axis.set_xlim(1, x_limit)
+        axis.set_xlabel("Duration minutes")
+        axis.grid(alpha=0.2)
+    axes[0].set_ylabel("Fare amount USD")
+    axes[1].set_ylabel("Experimental fare USD")
+    axes[2].set_ylabel("Fare amount USD")
+    handles = [
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor="#555555",
+            markersize=7,
+            label="Actual comparable trip",
+        ),
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor=artificial_color,
+            markersize=7,
+            label="Artificial +$100 trip",
+        ),
+        Line2D([0], [0], color=ols_color, linewidth=2.5, label="Clean OLS"),
+        Line2D(
+            [0],
+            [0],
+            color=ols_color,
+            linestyle="--",
+            linewidth=3,
+            label="Stressed OLS",
+        ),
+        Line2D([0], [0], color=lts_color, linewidth=2.5, label="Clean LTS"),
+        Line2D(
+            [0],
+            [0],
+            color=lts_color,
+            linestyle="--",
+            linewidth=3,
+            label="Stressed LTS",
+        ),
+    ]
+    figure.legend(
+        handles=handles,
+        loc="lower center",
+        ncol=3,
+        frameon=False,
+        bbox_to_anchor=(0.5, 0.01),
+    )
+    figure.suptitle(
+        "Actual comparable trips: OLS moves toward contamination, LTS remains stable\n"
+        "One passenger, weekday noon, distance 1.18-1.88 miles",
+        fontsize=14,
+    )
+    figure.tight_layout(rect=(0, 0.12, 1, 0.90))
+    figure.savefig(figures_dir / "actual_points_clean_stress_fitted_lines.png", dpi=220)
+    plt.close(figure)
+
+
 def run_stress_test(
     input_path: Path,
     tables_dir: Path,
@@ -548,7 +781,7 @@ def run_stress_test(
     write_csv(detection, tables_dir / "contamination_detection_summary.csv")
     write_csv(detection_detail, tables_dir / "contamination_detection_detail.csv")
     save_figures(performance, coefficient_change, figures_dir)
-    save_actual_points_fitted_lines(
+    save_clear_actual_points_comparison(
         training,
         contaminated_y,
         known_mask,
