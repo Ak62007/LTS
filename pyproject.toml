@@ -53,4 +53,5 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 "report/create_training_eda_report.py" = ["E501"]
+"report/build_final_report.py" = ["E501"]
 "notebooks/build_executed_notebooks.py" = ["E501"]

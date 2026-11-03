@@ -82,6 +82,21 @@ to the frozen model specification:
 3. `notebooks/03_training_eda_and_model_specification.ipynb`
 4. `notebooks/04_clean_ols_and_lts_comparison.ipynb`
 5. `notebooks/05_contamination_stress_test.ipynb`
+6. `notebooks/06_final_report_execution_evidence.ipynb` (exact report excerpts)
+
+The complete assignment is saved as `report/ED409_LTS_Final_Report.docx` and
+`report/ED409_LTS_Final_Report.pdf`. Its first two pages contain the case,
+dataset introduction, and business questions; the solution starts on page 3.
+Rebuild the DOCX and its execution evidence with:
+
+```bash
+uv run python report/build_final_report.py
+```
+
+The PDF is exported from the DOCX with Apple Pages and visually verified. The
+existing notebook builder regenerates notebooks 01-05; the report builder
+regenerates notebook 06. To update report wording while reusing executed code
+images, use `uv run python report/build_final_report.py --reuse-evidence`.
 
 Every code cell is executed and its output is stored in the notebook. Rebuild
 all three from the repository root with:

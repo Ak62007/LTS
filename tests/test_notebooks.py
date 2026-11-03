@@ -11,6 +11,7 @@ NOTEBOOKS = [
     "03_training_eda_and_model_specification.ipynb",
     "04_clean_ols_and_lts_comparison.ipynb",
     "05_contamination_stress_test.ipynb",
+    "06_final_report_execution_evidence.ipynb",
 ]
 
 
