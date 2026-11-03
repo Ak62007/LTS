@@ -8,8 +8,8 @@ The first two PDF pages contain the business scenario, dataset introduction,
 and four questions. The solution starts on page 3. The remainder explains the
 data preparation, estimator, diagnostics, actual-data results, audit queue,
 controlled contamination experiment, and limitations.
-The section "Direct answers to the business questions" explicitly answers
-each opening question using the results, immediately before the references.
+The section "Answers we found for the business questions" explicitly answers
+each opening question using the results, before the conclusion section.
 
 ## Rebuild within the repository
 

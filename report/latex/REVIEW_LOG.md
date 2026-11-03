@@ -82,3 +82,15 @@
   The final compiler log has no warnings or overfull/underfull boxes.
 - Refreshed the portable source ZIP and its existing extracted copy after
   verifying that the extracted copy contained no user changes.
+
+## Section order and repository link revision (3 November 2026)
+
+- Renamed the answers section to "Answers we found for the business questions"
+  and moved it before "What the audit team should conclude". Automatic section
+  numbering now makes the answers section 8 and the conclusion section 9.
+- Added the GitHub repository as an inline hyperlink in the sampling discussion,
+  where the preparation steps and executed notebooks are introduced.
+- Rebuilt and rendered all 20 pages. The answers occupy page 18, followed by
+  the conclusion on page 19. Inspected the three changed pages; all other
+  pages match the previously reviewed render exactly. Verified the clickable
+  repository URL on page 4 and a compiler log without layout warnings.

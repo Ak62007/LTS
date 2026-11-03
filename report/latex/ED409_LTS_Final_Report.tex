@@ -80,6 +80,8 @@ There is deliberately no upper-bound filter. In particular, the long-duration ob
 \subsection{From the eligible population to the modelling sample}
 A seed-42 permutation selects 50,000 of the 2,278,082 eligible records. A second fixed seed-42 procedure assigns 40,000 rows to training and 10,000 to evaluation. The earlier 10,000-row preparation sample is a separate exploratory artifact; it is not the sample behind the final results.
 
+The preparation steps and executed notebooks are available in the accompanying \href{https://github.com/Ak62007/LTS}{project repository}.
+
 \subsection{What each predictor means}
 Distance and duration describe the completed journey. Passenger count adds occupancy information. Pickup time enters as a pair of cyclical variables,
 \[
@@ -274,22 +276,7 @@ Recall is the proportion of shifted rows detected: $\mathrm{TP}/(\mathrm{TP}+\ma
 A ``false positive'' here means unaltered in the experiment. It does not establish that the row is an ordinary, correctly recorded journey. Some of these records may already be unusual relative to the fitted benchmark. This distinction explains why the experiment demonstrates resistance and screening sensitivity without validating automatic fraud classification.
 
 \clearpage
-\section{What the audit team should conclude}
-The case began with the need for a dependable comparison for ordinary taxi fares. LTS supplies a useful description of the dominant relationship: its absolute errors are smaller, and its distance--duration coefficients remain stable when a minority of training responses are shifted by a large amount. This supports its use as a descriptive benchmark and as one input to an audit queue.
-
-OLS retains an important advantage in this dataset. Its clean and stressed RMSE values are lower than the corresponding LTS values. It accommodates genuine extreme records more strongly, producing a better overall squared-error compromise. Resistance to corruption and minimum squared prediction loss are therefore distinct goals. The business recommendation depends on which goal matters for the proposed use.
-
-For an audit team, the next practical step would be a limited manual review of ranked candidates, with confirmed outcomes recorded for later threshold calibration. The 16.13\% clean flag rate is too large to treat casually as a list of established errors. The present analysis cannot estimate the financial value of an audit programme or the prevalence of misconduct.
-
-\subsection{Limits that matter for interpretation}
-The evidence comes from one month, one rate-code population, and one fixed random split. Trips may share traffic conditions, routes, drivers, or recording systems, so random row splitting does not establish independent errors or future-month accuracy.
-
-The additive fare model leaves visible mean structure and changing residual variance unexplained. Robust fitting does not repair every aspect of model specification. The fixed MAD rule is an implementation choice whose audit workload depends on this heterogeneous population. Conventional OLS inference is not transferred to the LTS coefficients after subset selection.
-
-Finally, the stress test is one deterministic realization of a conspicuous upward response shift. It includes no repeated-run uncertainty interval and no predictor corruption. Its strong LTS recall should not be generalized to subtle errors, downward shifts, or coordinated changes in trip attributes. Within those boundaries, the experiment gives clear evidence that LTS resists the specified response contamination better than OLS.
-
-\clearpage
-\section{Direct answers to the business questions}
+\section{Answers we found for the business questions}
 The following answers bring together the evidence for the four questions posed at the start. Both estimators were fitted to 40,000 training trips; prediction errors refer to the same 10,000 evaluation trips.
 
 \subsection{What is the fare relationship followed by ordinary trips?}
@@ -303,6 +290,21 @@ The screen identifies 6,452 training trips, or 16.13\%, that have zero reweighti
 
 \subsection{Does LTS remain stable when some fares are corrupted?}
 Yes, under the specified experiment. Adding \$100 to exactly 2,000 training fares raises OLS evaluation MAE from \$2.086 to \$5.383 and shifts its intercept upward by \$4.827. LTS MAE changes only from \$1.015 to \$1.000, with an intercept change of about $-\$0.025$. Its audit screen detects all 2,000 shifted rows, but also flags 5,684 unaltered rows, giving 100\% recall and 26.03\% precision against the artificial labels. LTS therefore demonstrates stability and sensitivity to this large response shift; it does not establish precise fraud identification or resistance to every type of corruption.
+
+\clearpage
+\section{What the audit team should conclude}
+The case began with the need for a dependable comparison for ordinary taxi fares. LTS supplies a useful description of the dominant relationship: its absolute errors are smaller, and its distance--duration coefficients remain stable when a minority of training responses are shifted by a large amount. This supports its use as a descriptive benchmark and as one input to an audit queue.
+
+OLS retains an important advantage in this dataset. Its clean and stressed RMSE values are lower than the corresponding LTS values. It accommodates genuine extreme records more strongly, producing a better overall squared-error compromise. Resistance to corruption and minimum squared prediction loss are therefore distinct goals. The business recommendation depends on which goal matters for the proposed use.
+
+For an audit team, the next practical step would be a limited manual review of ranked candidates, with confirmed outcomes recorded for later threshold calibration. The 16.13\% clean flag rate is too large to treat casually as a list of established errors. The present analysis cannot estimate the financial value of an audit programme or the prevalence of misconduct.
+
+\subsection{Limits that matter for interpretation}
+The evidence comes from one month, one rate-code population, and one fixed random split. Trips may share traffic conditions, routes, drivers, or recording systems, so random row splitting does not establish independent errors or future-month accuracy.
+
+The additive fare model leaves visible mean structure and changing residual variance unexplained. Robust fitting does not repair every aspect of model specification. The fixed MAD rule is an implementation choice whose audit workload depends on this heterogeneous population. Conventional OLS inference is not transferred to the LTS coefficients after subset selection.
+
+Finally, the stress test is one deterministic realization of a conspicuous upward response shift. It includes no repeated-run uncertainty interval and no predictor corruption. Its strong LTS recall should not be generalized to subtle errors, downward shifts, or coordinated changes in trip attributes. Within those boundaries, the experiment gives clear evidence that LTS resists the specified response contamination better than OLS.
 
 \clearpage
 \section*{References}
