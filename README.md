@@ -84,22 +84,25 @@ to the frozen model specification:
 5. `notebooks/05_contamination_stress_test.ipynb`
 6. `notebooks/06_final_report_execution_evidence.ipynb` (exact report excerpts)
 
-The complete assignment is saved as `report/ED409_LTS_Final_Report.docx` and
-`report/ED409_LTS_Final_Report.pdf`. Its first two pages contain the case,
+The final report is now written in **LaTeX**. The submission PDF is
+`report/ED409_LTS_Final_Report.pdf`, with editable source in
+`report/latex/ED409_LTS_Final_Report.tex` and a complete portable package at
+`report/ED409_LTS_LaTeX_Source.zip`. Its first two pages contain the case,
 dataset introduction, and business questions; the solution starts on page 3.
-Rebuild the DOCX and its execution evidence with:
+Rebuild the final PDF and source ZIP with Tectonic installed:
 
 ```bash
-uv run python report/build_final_report.py
+uv run python -m report.build_latex_report
 ```
 
-The PDF is exported from the DOCX with Apple Pages and visually verified. The
-existing notebook builder regenerates notebooks 01-05; the report builder
-regenerates notebook 06. To update report wording while reusing executed code
-images, use `uv run python report/build_final_report.py --reuse-evidence`.
+See `report/latex/README.md` for standalone compilation and editing guidance,
+and `report/latex/REVIEW_LOG.md` for the iterative review. The earlier DOCX and
+its builder are retained as a previous edition. They do not update the LaTeX
+report. `report/build_final_report.py` also regenerates notebook 06 and the
+executed-code images; use it only when that evidence needs refreshing.
 
 Every code cell is executed and its output is stored in the notebook. Rebuild
-all three from the repository root with:
+notebooks 01-05 from the repository root with:
 
 ```bash
 uv run python notebooks/build_executed_notebooks.py
