@@ -38,7 +38,7 @@
   one page, and replaced the reference-list environment to remove its layout
   warning. Used hanging reference indentation and readable URL wrapping.
 
-## Final verification (3 November 2026)
+## Initial LaTeX edition verification (3 November 2026)
 
 - Final PDF: 19 pages; case, dataset introduction, and four questions occupy
   pages 1-2; the solution starts on page 3.
@@ -60,3 +60,25 @@
   passes. The report build uses saved estimates and does not refit models.
 - Raw data, modelling split, contamination labels, and statistical estimates
   were not changed by this report revision.
+
+## Requested editorial revision (3 November 2026)
+
+- Removed the download-date sentence, passenger/driver contrast, and rate-code
+  definition from page 1 as requested.
+- Removed both computing-benchmark paragraphs from the sampling section and
+  the later sentence referring back to that discussion.
+- Removed the entire closing "Reproducibility and preparation for the
+  presentation" section. Provenance remains recorded in repository metadata.
+- Added "Direct answers to the business questions" immediately before the
+  references, with a separate answer for each of the four opening questions.
+  The answers retain the MAE/RMSE trade-off and the distinction between audit
+  candidates and verified errors or fraud.
+- The revised PDF has 20 pages: case/questions on pages 1-2, solution starting
+  on page 3, direct answers on page 19, and references on page 20.
+- Checked the new answer-section values against the saved model, influence,
+  audit, and contamination results. No models or estimates were changed.
+- Rendered all 20 pages. Fifteen unchanged pages match the previously reviewed
+  render exactly; inspected each revised/new page and confirmed legible layout.
+  The final compiler log has no warnings or overfull/underfull boxes.
+- Refreshed the portable source ZIP and its existing extracted copy after
+  verifying that the extracted copy contained no user changes.

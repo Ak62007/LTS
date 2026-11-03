@@ -35,9 +35,9 @@ There is a second difficulty. The records used to learn a normal fare pattern ca
 This case examines Least Trimmed Squares (LTS) regression as a way to obtain a more stable fare benchmark. Ordinary least squares (OLS) provides the comparison. Both methods use the same information, but LTS initially fits the observations most compatible with a common relationship. The business purpose is to understand that relationship, assess its stability, and produce a list of records for manual review.
 
 \subsection*{What the dataset contains}
-The study uses the \emph{January 2026 Yellow Taxi Trip Records} published by the New York City Taxi and Limousine Commission (TLC). The file was downloaded from the official TLC portal on 1 November 2026. It contains 3,724,889 submitted trip records. One row represents one recorded journey, rather than one passenger or one driver. The records are supplied by authorized technology providers; TLC does not guarantee their accuracy (NYC TLC, n.d.).
+The study uses the \emph{January 2026 Yellow Taxi Trip Records} published by the New York City Taxi and Limousine Commission (TLC). It contains 3,724,889 submitted trip records. One row represents one recorded journey. The records are supplied by authorized technology providers; TLC does not guarantee their accuracy (NYC TLC, n.d.).
 
-The response variable is \texttt{fare\_amount}, the metered time-and-distance fare in US dollars. It is different from the passenger's total bill: tips, tolls, and separately itemized extras are recorded in other fields. The explanatory variables are trip distance in miles, elapsed duration in minutes, passenger count, pickup time, and weekend status. Duration is calculated from the pickup and drop-off timestamps. Standard-rate trips are identified by \texttt{RatecodeID = 1} (NYC TLC, 2025).
+The response variable is \texttt{fare\_amount}, the metered time-and-distance fare in US dollars. It is different from the passenger's total bill: tips, tolls, and separately itemized extras are recorded in other fields. The explanatory variables are trip distance in miles, elapsed duration in minutes, passenger count, pickup time, and weekend status. Duration is calculated from the pickup and drop-off timestamps.
 
 After basic eligibility checks, 2,278,082 records remain. A reproducible sample of 50,000 trips is divided into 40,000 training observations and 10,000 evaluation observations. No upper limit is imposed on fare, distance, duration, or passenger count. Keeping large values is essential because their effect on regression is the subject of the case.
 
@@ -79,10 +79,6 @@ There is deliberately no upper-bound filter. In particular, the long-duration ob
 
 \subsection{From the eligible population to the modelling sample}
 A seed-42 permutation selects 50,000 of the 2,278,082 eligible records. A second fixed seed-42 procedure assigns 40,000 rows to training and 10,000 to evaluation. The earlier 10,000-row preparation sample is a separate exploratory artifact; it is not the sample behind the final results.
-
-The larger sample was adopted after a computing benchmark showed that a 50,000-row FAST-LTS fit was manageable on the device. The benchmark completed in about 7.18 seconds, with approximately 213 MiB of additional peak process memory. Model fitting in this project uses a two-thread numerical-library limit.
-
-There is a qualification to the evaluation design. That preliminary benchmark fitted all 50,000 sampled rows before the final split was assigned. The reported final fits and scaling use training rows only, and the primary settings were not chosen from evaluation performance. Nevertheless, this is an internal random holdout, rather than a completely independent external validation exercise. The limitation is retained when interpreting the results.
 
 \subsection{What each predictor means}
 Distance and duration describe the completed journey. Passenger count adds occupancy information. Pickup time enters as a pair of cyclical variables,
@@ -286,11 +282,27 @@ OLS retains an important advantage in this dataset. Its clean and stressed RMSE 
 For an audit team, the next practical step would be a limited manual review of ranked candidates, with confirmed outcomes recorded for later threshold calibration. The 16.13\% clean flag rate is too large to treat casually as a list of established errors. The present analysis cannot estimate the financial value of an audit programme or the prevalence of misconduct.
 
 \subsection{Limits that matter for interpretation}
-The evidence comes from one month, one rate-code population, and one fixed random split. Trips may share traffic conditions, routes, drivers, or recording systems, so random row splitting does not establish independent errors or future-month accuracy. The earlier full-sample computing benchmark also limits claims of wholly independent validation.
+The evidence comes from one month, one rate-code population, and one fixed random split. Trips may share traffic conditions, routes, drivers, or recording systems, so random row splitting does not establish independent errors or future-month accuracy.
 
 The additive fare model leaves visible mean structure and changing residual variance unexplained. Robust fitting does not repair every aspect of model specification. The fixed MAD rule is an implementation choice whose audit workload depends on this heterogeneous population. Conventional OLS inference is not transferred to the LTS coefficients after subset selection.
 
 Finally, the stress test is one deterministic realization of a conspicuous upward response shift. It includes no repeated-run uncertainty interval and no predictor corruption. Its strong LTS recall should not be generalized to subtle errors, downward shifts, or coordinated changes in trip attributes. Within those boundaries, the experiment gives clear evidence that LTS resists the specified response contamination better than OLS.
+
+\clearpage
+\section{Direct answers to the business questions}
+The following answers bring together the evidence for the four questions posed at the start. Both estimators were fitted to 40,000 training trips; prediction errors refer to the same 10,000 evaluation trips.
+
+\subsection{What is the fare relationship followed by ordinary trips?}
+The visible pattern is that fare rises with distance and duration. Holding the other included predictors fixed, primary reweighted LTS estimates \$1.813 per additional mile and \$0.605 per additional minute. OLS estimates \$3.622 per mile and \$0.082 per minute, allocating much more of the relationship to distance. LTS follows the central trip pattern more closely: its median absolute prediction error is \$0.347, compared with \$1.594 for OLS. These are conditional statistical associations within the chosen model, not official tariff rates or causal effects.
+
+\subsection{How much do unusual trips affect OLS?}
+The diagnostics identify substantial influence: 1,663 training observations exceed the Cook's-distance screen, and the four most influential records combine roughly day-long durations with fares of only \$7.20--\$24.00. They help explain the relatively flat OLS duration relationship. LTS reduces evaluation MAE from the OLS value of \$2.086 to \$1.015. However, OLS has lower RMSE: \$3.253 versus \$8.756. Thus OLS accommodates extreme configurations more strongly, while LTS fits many ordinary trips more closely. The evidence supports different strengths, rather than one universally better estimator.
+
+\subsection{Which records should enter an audit queue?}
+The screen identifies 6,452 training trips, or 16.13\%, that have zero reweighting weight or an absolute standardized raw-LTS residual above 2.5. The stricter 2.5 rule flags 5,929 of these trips; it does not add separate candidates to the union. Review should begin with the largest absolute standardized deviations, covering fares unusually high or low for their recorded trip characteristics. Investigators should check timestamps, meter records, routes, and fare context. These are audit candidates; the available data cannot establish which flags are recording errors or fraud.
+
+\subsection{Does LTS remain stable when some fares are corrupted?}
+Yes, under the specified experiment. Adding \$100 to exactly 2,000 training fares raises OLS evaluation MAE from \$2.086 to \$5.383 and shifts its intercept upward by \$4.827. LTS MAE changes only from \$1.015 to \$1.000, with an intercept change of about $-\$0.025$. Its audit screen detects all 2,000 shifted rows, but also flags 5,684 unaltered rows, giving 100\% recall and 26.03\% precision against the artificial labels. LTS therefore demonstrates stability and sensitivity to this large response shift; it does not establish precise fraud identification or resistance to every type of corruption.
 
 \clearpage
 \section*{References}
@@ -306,13 +318,4 @@ Rousseeuw, P. J., \& Van Driessen, K. (2006). Computing LTS regression for large
 RobPy. (n.d.). \emph{robpy.regression} [Software documentation]. \url{https://robpy.readthedocs.io/en/stable/api/robpy.regression.html}
 \par\endgroup
 
-\section*{Reproducibility and preparation for the presentation}
-The report's code images are the exact excerpts executed in notebook 06. They call shared project functions; the explicit LTS excerpt also reproduces the reweighting directly. Notebooks 01--05 provide the teaching sequence, and the source modules contain the complete preparation and fitting implementation. Tables in this LaTeX report are generated directly from the saved CSV results.
-
-The preserved file fingerprints are:\\
-Raw Parquet: {\small\nolinkurl{8b3933fe6f0d7b6d8826613c0dd724edc680ff7c49e2bd4c7635c05102728637}}\\
-Modelling CSV: {\small\nolinkurl{9325f572dc4d2036b2df67f2f2e63350a3b88bc52b8b7cde84b7d1f727a7fe39}}.\\
-Metadata distinguishes the initial 10,000-row artifact from the later 50,000-row modelling sample.
-
-The main concepts come from ED409 Modules I, II, and V: multiple regression, heteroskedasticity-consistent uncertainty, influence, LTS, and applied regression. FAST-LTS, MAD, held-out evaluation, and the named diagnostic tests are explained as supporting ideas. The separate syllabus-alignment guide provides short definitions and questions for presentation preparation.
 \end{document}
